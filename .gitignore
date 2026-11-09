@@ -1,0 +1,38 @@
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+.aws/
+.ssh/
+.codex/
+.agents/
+
+# Python and local tooling
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+tmp/
+*.log
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Runtime data and backups
+qdrant_data/
+qdrant_storage/
+*.snapshot
+backups/
+app/data/*.pdf
+frontend/assets/nuur-photo.jpg

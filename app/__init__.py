@@ -1,0 +1,1 @@
+"""Nuur AI FastAPI application."""
