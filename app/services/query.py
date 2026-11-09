@@ -17,6 +17,8 @@ OUT_OF_SCOPE = {
 }
 UNSUPPORTED_LANGUAGE = "I can only answer in English or Somali. Please ask in one of those languages."
 OUT_OF_SCOPE_MARKER = "__OUT_OF_SCOPE__"
+# Short identity questions also need the profile summary, which can rank below FAQs.
+RETRIEVAL_LIMIT = 8
 
 GREETINGS: dict[Literal["en", "so"], set[str]] = {
     "en": {"hi", "hello", "hey", "good morning", "good afternoon", "good evening"},
@@ -80,7 +82,7 @@ def query_user(
         return UNSUPPORTED_LANGUAGE
 
     logger.info("RAG query: embedding and searching Qdrant")
-    matches = vector_store.similarity_search_with_score(question, k=4)
+    matches = vector_store.similarity_search_with_score(question, k=RETRIEVAL_LIMIT)
     if not matches or matches[0][1] < 0.38:
         logger.info("RAG query: no sufficiently relevant source found")
         return OUT_OF_SCOPE[language]

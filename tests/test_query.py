@@ -35,8 +35,24 @@ class GreetingTests(unittest.TestCase):
         model.invoke.return_value.content = "Nuur develops software."
         question = "Hello, who is Nuur?"
         self.assertEqual(query_user(question, store, model), "Nuur develops software.")
-        store.similarity_search_with_score.assert_called_once_with(question, k=4)
+        store.similarity_search_with_score.assert_called_once_with(question, k=8)
         self.assertIn("Nuur develops software.", model.invoke.call_args.args[0][1].content)
+
+    def test_identity_question_includes_summary_ranked_below_faq_chunks(self):
+        store = Mock()
+        matches = [
+            (Document(page_content=f"FAQ fragment {index}: professional details."), 0.8 - index * 0.01)
+            for index in range(7)
+        ] + [(Document(page_content="PROFILE SUMMARY: Nuur is a software developer."), 0.70)]
+        store.similarity_search_with_score.side_effect = lambda question, k: matches[:k]
+        model = Mock()
+
+        def answer_from_context(messages):
+            text = messages[1].content
+            return Mock(content="Nuur is a software developer." if "PROFILE SUMMARY" in text else "__OUT_OF_SCOPE__")
+
+        model.invoke.side_effect = answer_from_context
+        self.assertEqual(query_user("Who is Nuur?", store, model), "Nuur is a software developer.")
 
     def test_unsupported_language_does_not_query_sources(self):
         store = Mock()
