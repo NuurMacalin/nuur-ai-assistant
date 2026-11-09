@@ -40,7 +40,7 @@ services:
   indexer:
     <<: *app
     profiles: ["tools"]
-    command: ["python", "-m", "app.index"]
+    command: ["python", "-m", "app.index", "--directory", "app/data"]
     volumes:
       - ./app/data:/srv/nuur-ai/app/data:ro
 

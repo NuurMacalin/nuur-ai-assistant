@@ -27,7 +27,7 @@ else:
     raise SystemExit('Qdrant did not become ready. Check docker compose logs.')
 PY
 
-# Existing indexed collections are preserved. A new server needs sample.pdf.
+# Add every privately uploaded PDF; existing and already imported chunks remain.
 "${compose[@]}" run --rm indexer
 "${compose[@]}" run --rm --no-deps web python -m app.check_services --google
 "${compose[@]}" up -d web

@@ -19,14 +19,23 @@ files should be updated without replacing them with the empty example.
 
 ```powershell
 docker compose up -d
-.\venv\Scripts\python.exe -m app.index
+.\venv\Scripts\python.exe -m app.index --directory app/data
 .\venv\Scripts\python.exe -m app.check_services --google
 .\venv\Scripts\python.exe -m uvicorn app.main:app --reload
 ```
 
-Place the private knowledge PDF at `app/data/sample.pdf` before the first indexing
-run. The indexer preserves a populated collection, so rerunning it does not add
-duplicate chunks. Use a new collection name when preparing revised source data.
+Place your private knowledge PDFs in `app/data` before the first indexing run.
+Directory imports add missing chunks from every PDF while preserving existing
+documents. Identical files and repeated imports do not add duplicate chunks or
+call Google again. The original single-PDF command remains available:
+
+```powershell
+.\venv\Scripts\python.exe -m app.index --pdf "app/data/another-profile.pdf" --append
+```
+
+Without `--append`, the single-PDF command preserves a populated collection and
+makes no changes. For a replacement knowledge base, use a new collection name;
+append mode preserves old versions rather than deleting them.
 
 Open http://127.0.0.1:8000. Configuration is shared by the server, indexer, and
 service checks. Server environment variables take precedence over local `.env`

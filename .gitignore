@@ -34,5 +34,5 @@ qdrant_data/
 qdrant_storage/
 *.snapshot
 backups/
-app/data/*.pdf
+app/data/*.[pP][dD][fF]
 frontend/assets/nuur-photo.jpg

@@ -27,19 +27,27 @@ Set a working `GOOGLE_API_KEY` and change `SITE_ADDRESS` to the real hostname,
 for example `ai.your-domain.com`. The server environment is excluded from both
 Git and the Docker build context.
 
-## Transfer the knowledge document privately
+## Transfer the knowledge documents privately
 
-The original PDF is not published in GitHub or baked into the app image. From
-your own computer, upload it to the cloned checkout on your Droplet:
+PDFs are not published in GitHub or baked into the app image. The local Qdrant
+database does not travel with a Git push. From your own computer, upload every
+PDF in `app/data` to the cloned checkout on your Droplet:
 
 ```powershell
-scp .\app\data\sample.pdf root@YOUR_DROPLET_IP:~/nuur-ai-assistant/app/data/sample.pdf
+.\deploy\upload-knowledge.ps1 -ServerHost YOUR_DROPLET_IP
 ```
 
-On the first deployment, the indexer embeds this PDF with the configured Google
-API and stores it in Qdrant. Subsequent deployments preserve the existing index.
-For revised documents, index into a new `QDRANT_COLLECTION` and switch the app to
-that collection after verifying it. Existing collections are not erased.
+The upload helper uses your existing SSH authentication. It sends PDFs only;
+configure the API key separately in the server's `app/.env`.
+
+On the first deployment, the indexer embeds all uploaded PDFs with the configured
+Google API and stores them in Qdrant. Subsequent deployments add missing documents
+and skip already indexed chunks. Repeated runs preserve the index without paying
+to embed the same chunks again. If no PDFs are uploaded, startup can reuse an
+existing populated collection; a fresh database requires the private PDFs first.
+
+For a replacement document set, index into a new `QDRANT_COLLECTION` and switch
+the app after verification. Append imports preserve old data rather than erasing it.
 
 ## Start and verify
 
@@ -51,7 +59,7 @@ curl --fail https://YOUR_DOMAIN/health
 curl --fail https://YOUR_DOMAIN/ready
 ```
 
-The script builds the image, starts Qdrant, indexes missing data, checks Gemini
+The script builds the image, starts Qdrant, indexes every uploaded PDF, checks Gemini
 with synthetic text, and starts the web server. Caddy manages HTTPS when the
 configured hostname resolves to this server and ports 80/443 are reachable.
 

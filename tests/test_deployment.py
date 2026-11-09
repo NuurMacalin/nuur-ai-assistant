@@ -1,4 +1,5 @@
 import unittest
+from tempfile import TemporaryDirectory
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -42,6 +43,10 @@ class ReadinessTests(unittest.TestCase):
 class IndexingTests(unittest.TestCase):
     def setUp(self):
         self.settings = Settings(google_api_key='test-only-key', qdrant_collection='test_collection')
+        self.directory = TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.pdf = Path(self.directory.name) / 'sample.pdf'
+        self.pdf.write_bytes(b'synthetic PDF fixture')
         self.client = Mock()
         self.client.collection_exists.return_value = False
         self.documents = [Document(page_content='A synthetic document.', metadata={'page': 0})]
@@ -51,7 +56,7 @@ class IndexingTests(unittest.TestCase):
         self.client.count.return_value = SimpleNamespace(count=13)
         with patch('app.index.create_qdrant_client', return_value=self.client):
             with patch('app.index.create_embeddings') as embeddings:
-                self.assertEqual(index_pdf(self.settings, Path('sample.pdf')), 13)
+                self.assertEqual(index_pdf(self.settings, self.pdf), 13)
         embeddings.assert_not_called()
         self.client.upsert.assert_not_called()
         self.client.create_collection.assert_not_called()
@@ -63,7 +68,7 @@ class IndexingTests(unittest.TestCase):
         with patch('app.index.create_qdrant_client', return_value=self.client):
             with patch('app.index.load_pdf_documents', return_value=self.documents):
                 with patch('app.index.create_embeddings', return_value=embeddings):
-                    self.assertEqual(index_pdf(self.settings, Path('sample.pdf')), 1)
+                    self.assertEqual(index_pdf(self.settings, self.pdf), 1)
         self.assertEqual(self.client.create_collection.call_args.kwargs['collection_name'], 'test_collection')
         upsert = self.client.upsert.call_args
         self.assertEqual(upsert.args[0], 'test_collection')
@@ -77,7 +82,7 @@ class IndexingTests(unittest.TestCase):
             with patch('app.index.load_pdf_documents', return_value=self.documents):
                 with patch('app.index.create_embeddings', return_value=embeddings):
                     with self.assertRaises(RuntimeError):
-                        index_pdf(self.settings, Path('sample.pdf'))
+                        index_pdf(self.settings, self.pdf)
         self.client.create_collection.assert_not_called()
         self.client.delete_collection.assert_not_called()
         self.client.upsert.assert_not_called()
